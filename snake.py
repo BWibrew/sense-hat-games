@@ -29,7 +29,8 @@ def init():
 
     sense.stick.direction_any = direction
 
-    run_game()
+    while True:
+        run_game()
 
 
 def random_coords():
@@ -52,8 +53,11 @@ def draw_food():
 def eat_food():
     global score
     global food_coords
+    global step_time
 
     score += 1
+    if step_time >= 0.1:
+        step_time = step_time*0.9
     food_coords = random_coords()
     print('You have scored: ' + str(score) + ' points!')
 
@@ -100,7 +104,9 @@ def move_left():
 def refresh():
     debug('Refreshing...')
     sense.clear()
-    run_game()
+    draw_snake()
+    draw_food()
+    time.sleep(step_time)
 
 
 def run_game():
@@ -116,9 +122,6 @@ def run_game():
     if snake_coords == food_coords:
         eat_food()
 
-    draw_snake()
-    draw_food()
-    time.sleep(step_time)
     refresh()
 
 
@@ -127,5 +130,9 @@ def debug(value=''):
         print(value)
 
 
-init()
-signal.pause()
+if __name__ == '__main__':
+    try:
+        init()
+        signal.pause()
+    except KeyboardInterrupt:
+        sense.clear()
