@@ -2,20 +2,24 @@ from sense_hat import SenseHat, ACTION_PRESSED
 import random
 import signal
 import time
+import copy
 
 sense = SenseHat()
 sense.clear()
 sense.low_light = True
 
 snake_colour = (0, 255, 0)
+snake_body_colour = (0, 255, 125)
 food_colour = (255, 0, 0)
 snake_coords = {}
 food_coords = {}
 snake_direction = ''
+snake_movement_shadow = []
 coord_limit = 7
 coord_start = 0
 score = 0
-step_time = 1
+step_timer = 1
+step_timer_lower_limit = 0.1
 
 enable_debug = False
 
@@ -24,8 +28,8 @@ def init():
     global snake_coords
     global food_coords
 
-    snake_coords = random_coords()
     food_coords = random_coords()
+    snake_coords = random_coords()
 
     sense.stick.direction_any = set_direction
 
@@ -44,21 +48,24 @@ def draw_snake():
     debug('Drawing snake at: ' + str(snake_coords['x']) + ',' + str(snake_coords['y']))
     sense.set_pixel(snake_coords['x'], snake_coords['y'], snake_colour)
 
+    if snake_direction != '':
+        for i, coord in enumerate(snake_movement_shadow, start=1):
+            colour = snake_body_colour
+            if i == 0:
+                colour = snake_colour
+            debug('Drawing snake tail at: ' + str(coord['x']) + ',' + str(coord['y']))
+            sense.set_pixel(coord['x'], coord['y'], colour)
+
 
 def draw_food():
     debug('Drawing food at: ' + str(food_coords['x']) + ',' + str(food_coords['y']))
     sense.set_pixel(food_coords['x'], food_coords['y'], food_colour)
 
 
-def eat_food():
+def update_score():
     global score
-    global food_coords
-    global step_time
 
     score += 1
-    if step_time >= 0.1:
-        step_time = step_time*0.9
-    food_coords = random_coords()
     print('You have scored: ' + str(score) + ' points!')
 
 
@@ -70,7 +77,12 @@ def set_direction(event):
 
 
 def move_snake():
+    global snake_coords
+
     debug('Moving ' + snake_direction)
+
+    update_movement_shadow()
+
     if snake_direction == 'up' or snake_direction == 'down':
         axis = 'y'
     else:
@@ -89,19 +101,42 @@ def move_snake():
             snake_coords[axis] = snake_coords[axis] + 1
 
 
+def update_movement_shadow():
+    snake_movement_shadow.insert(0, copy.deepcopy(snake_coords))
+
+    while len(snake_movement_shadow) >= score + 1:
+        snake_movement_shadow.pop(-1)
+
+
+def update_step_timer():
+    global step_timer
+
+    if step_timer >= step_timer_lower_limit:
+        step_timer = step_timer * 0.9
+        debug('Updating step timer to: ' + str(step_timer))
+
+
+def make_new_food():
+    global food_coords
+
+    food_coords = random_coords()
+
+
 def refresh():
     debug('Refreshing...')
     sense.clear()
     draw_snake()
     draw_food()
-    time.sleep(step_time)
+    time.sleep(step_timer)
 
 
 def run_game():
     move_snake()
 
     if snake_coords == food_coords:
-        eat_food()
+        update_score()
+        update_step_timer()
+        make_new_food()
 
     refresh()
 
