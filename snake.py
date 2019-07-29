@@ -11,7 +11,7 @@ snake_colour = (0, 255, 0)
 food_colour = (255, 0, 0)
 snake_coords = {}
 food_coords = {}
-snake_direction = None
+snake_direction = ''
 coord_limit = 7
 coord_start = 0
 score = 0
@@ -27,7 +27,7 @@ def init():
     snake_coords = random_coords()
     food_coords = random_coords()
 
-    sense.stick.direction_any = direction
+    sense.stick.direction_any = set_direction
 
     while True:
         run_game()
@@ -62,43 +62,31 @@ def eat_food():
     print('You have scored: ' + str(score) + ' points!')
 
 
-def direction(event):
+def set_direction(event):
     global snake_direction
 
     if event.action == ACTION_PRESSED:
         snake_direction = event.direction
 
 
-def move_up():
-    debug('Moving up')
-    if snake_coords['y'] == coord_start:
-        snake_coords['y'] = coord_limit
+def move_snake():
+    debug('Moving ' + snake_direction)
+    if snake_direction == 'up' or snake_direction == 'down':
+        axis = 'y'
     else:
-        snake_coords['y'] = snake_coords['y'] - 1
+        axis = 'x'
 
+    if snake_direction == 'up' or snake_direction == 'left':
+        if snake_coords[axis] == coord_start:
+            snake_coords[axis] = coord_limit
+        else:
+            snake_coords[axis] = snake_coords[axis] - 1
 
-def move_right():
-    debug('Moving right')
-    if snake_coords['x'] == coord_limit:
-        snake_coords['x'] = coord_start
-    else:
-        snake_coords['x'] = snake_coords['x'] + 1
-
-
-def move_down():
-    debug('Moving down')
-    if snake_coords['y'] == coord_limit:
-        snake_coords['y'] = coord_start
-    else:
-        snake_coords['y'] = snake_coords['y'] + 1
-
-
-def move_left():
-    debug('Moving left')
-    if snake_coords['x'] == coord_start:
-        snake_coords['x'] = coord_limit
-    else:
-        snake_coords['x'] = snake_coords['x'] - 1
+    if snake_direction == 'down' or snake_direction == 'right':
+        if snake_coords[axis] == coord_limit:
+            snake_coords[axis] = coord_start
+        else:
+            snake_coords[axis] = snake_coords[axis] + 1
 
 
 def refresh():
@@ -110,14 +98,7 @@ def refresh():
 
 
 def run_game():
-    if snake_direction == 'up':
-        move_up()
-    elif snake_direction == 'right':
-        move_right()
-    elif snake_direction == 'down':
-        move_down()
-    elif snake_direction == 'left':
-        move_left()
+    move_snake()
 
     if snake_coords == food_coords:
         eat_food()
