@@ -14,6 +14,7 @@ food_colour = (255, 0, 0)
 snake_coords = {}
 food_coords = {}
 snake_direction = ''
+previous_snake_direction = ''
 snake_movement_shadow = []
 coord_limit = 7
 coord_start = 0
@@ -71,8 +72,25 @@ def update_score():
 
 def set_direction(event):
     global snake_direction
+    global previous_snake_direction
 
     if event.action == ACTION_PRESSED:
+        previous_snake_direction = snake_direction
+
+        # Prevent snake moving backwards over itself
+        if score > 0:
+            if event.direction == 'up' and previous_snake_direction == 'down':
+                return
+
+            if event.direction == 'down' and previous_snake_direction == 'up':
+                return
+
+            if event.direction == 'left' and previous_snake_direction == 'right':
+                return
+
+            if event.direction == 'right' and previous_snake_direction == 'left':
+                return
+
         snake_direction = event.direction
 
 
@@ -119,7 +137,12 @@ def update_step_timer():
 def make_new_food():
     global food_coords
 
-    food_coords = random_coords()
+    new_coords = random_coords()
+
+    if new_coords in snake_movement_shadow:
+        make_new_food()
+    else:
+        food_coords = new_coords
 
 
 def refresh():
