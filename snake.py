@@ -145,6 +145,37 @@ def make_new_food():
         food_coords = new_coords
 
 
+def end_game():
+    print('Game Over!\nFinal Score: ' + str(score))
+    o = (255, 69, 0)
+    b = (0, 0, 0)
+    skull_art = [
+        b, b, o, o, o, o, b, b,
+        b, o, o, o, o, o, o, b,
+        o, o, b, o, o, b, o, o,
+        o, b, b, o, o, b, b, o,
+        o, o, o, o, o, o, o, o,
+        b, o, o, b, b, o, o, b,
+        b, b, o, o, o, o, b, b,
+        b, b, o, b, b, o, b, b,
+    ]
+
+    i = 0
+    while i <= 1:
+        sense.set_pixels([(255, 255, 255)] * 64)
+        time.sleep(0.2)
+        sense.set_pixels([food_colour] * 64)
+        time.sleep(0.2)
+        i += 1
+
+    sense.set_pixels(skull_art)
+    time.sleep(2)
+    sense.show_message('You scored: ' + str(score), 0.08)
+    sense.clear()
+
+    raise SystemExit(0)
+
+
 def refresh():
     debug('Refreshing...')
     sense.clear()
@@ -155,6 +186,9 @@ def refresh():
 
 def run_game():
     move_snake()
+
+    if snake_coords in snake_movement_shadow:
+        end_game()
 
     if snake_coords == food_coords:
         update_score()
